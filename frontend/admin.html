@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Kampala Needs</title>
+  <style>
+    :root { --teal:#0d9488; --bg:#f1f5f9; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --danger:#ef4444; --ok:#22c55e; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:800px; margin:0 auto; padding:24px 16px; }
+    .card { background:#fff; border-radius:14px; padding:18px; margin-bottom:12px; border-left:4px solid var(--teal); }
+    h1 { font-size:1.4rem; }
+    .muted { color:var(--muted); font-size:.9rem; }
+    input, select, textarea { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font:inherit; margin-top:4px; }
+    label { display:block; font-size:.8rem; font-weight:600; color:var(--muted); margin:10px 0 0; }
+    .btn { border:none; border-radius:10px; padding:10px 16px; font-weight:600; cursor:pointer; }
+    .p { background:var(--teal); color:#fff; } .ok { background:var(--ok); color:#fff; } .d { background:var(--danger); color:#fff; } .g { background:#e2e8f0; }
+    .o { background:#fff; color:var(--teal); border:1.5px solid var(--teal); }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+    .tab { padding:8px 14px; border-radius:999px; background:#e2e8f0; border:none; font-weight:600; cursor:pointer; }
+    .tab.on { background:var(--teal); color:#fff; }
+    .hidden { display:none !important; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .search { display:flex; gap:8px; margin-bottom:12px; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; justify-content:center; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; width:100%; max-width:800px; max-height:92vh; overflow:auto; border-radius:20px 20px 0 0; padding:22px 18px 36px; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="setupView" class="hidden">
+      <div class="card" style="max-width:380px;margin:40px auto">
+        <h1>Create your admin password</h1>
+        <p class="muted" style="margin:8px 0 14px">Choose a password only you know. You will use it to approve listings and mark Featured after payment. There is no default password.</p>
+        <form onsubmit="setup(event)">
+          <label>New password (min 8 characters)<input name="password" type="password" minlength="8" required /></label>
+          <label>Confirm password<input name="confirm" type="password" minlength="8" required /></label>
+          <p id="setupErr" class="muted" style="color:var(--danger);margin-top:8px"></p>
+          <button class="btn p" style="width:100%;margin-top:12px">Save password</button>
+        </form>
+      </div>
+    </div>
+    <div id="loginView" class="hidden">
+      <div class="card" style="max-width:380px;margin:40px auto">
+        <h1>Admin login</h1>
+        <p class="muted" style="margin:8px 0 14px">Kampala Needs moderation</p>
+        <form onsubmit="login(event)">
+          <label>Password<input name="password" type="password" required /></label>
+          <p id="loginErr" class="muted" style="color:var(--danger);margin-top:8px"></p>
+          <button class="btn p" style="width:100%;margin-top:12px">Log in</button>
+        </form>
+      </div>
+    </div>
+    <div id="dashView" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h1>Admin</h1><p class="muted">Review suggestions and manage listings</p></div>
+        <button class="btn g" onclick="logout()">Log out</button>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-t="pending" onclick="tab('pending')">Pending</button>
+        <button class="tab" data-t="list" onclick="tab('list')">All providers</button>
+        <button class="tab" data-t="add" onclick="tab('add')">Add new</button>
+        <button class="tab" data-t="pw" onclick="tab('pw')">Change password</button>
+      </div>
+      <div id="pendingPanel"></div>
+      <div id="listPanel" class="hidden">
+        <div class="search"><input id="pq" placeholder="Search name, area, phone..." onkeydown="if(event.key==='Enter')loadList()" /><button class="btn p" onclick="loadList()">Search</button></div>
+        <div id="plist"></div>
+      </div>
+      <div id="addPanel" class="hidden">
+        <div class="card"><h3>Add provider</h3>
+          <form onsubmit="addP(event)">
+            <label>Name *<input name="name" required /></label>
+            <label>Category *<select name="category_id" id="addCat" required></select></label>
+            <label>Description<textarea name="description"></textarea></label>
+            <div class="row2"><label>Address<input name="address" /></label><label>Area<input name="area" /></label></div>
+            <div class="row2"><label>Phone<input name="phone" /></label><label>WhatsApp<input name="whatsapp" /></label></div>
+            <div class="row2"><label>Latitude<input name="latitude" type="number" step="any" /></label><label>Longitude<input name="longitude" type="number" step="any" /></label></div>
+            <label><input type="checkbox" name="verified" checked /> Verified / Trusted</label>
+            <label><input type="checkbox" name="featured" /> Featured (paid)</label>
+            <label>Featured until<input name="featured_until" type="date" /></label>
+            <button class="btn p" style="margin-top:12px">Add provider</button>
+          </form>
+        </div>
+      </div>
+      <div id="pwPanel" class="hidden">
+        <div class="card"><h3>Change your password</h3>
+          <form onsubmit="changePw(event)">
+            <label>Current password<input name="current" type="password" required /></label>
+            <label>New password (min 8)<input name="next" type="password" minlength="8" required /></label>
+            <label>Confirm new password<input name="confirm" type="password" minlength="8" required /></label>
+            <p id="pwErr" class="muted" style="color:var(--danger);margin-top:8px"></p>
+            <button class="btn p" style="margin-top:12px">Update password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="editM"><div class="modal">
+    <h2>Edit provider</h2>
+    <form onsubmit="saveEdit(event)">
+      <input type="hidden" id="eid" />
+      <label>Name *<input id="ename" required /></label>
+      <label>Category *<select id="ecat" required></select></label>
+      <label>Description<textarea id="edesc"></textarea></label>
+      <div class="row2"><label>Address<input id="eaddr" /></label><label>Area<input id="earea" /></label></div>
+      <div class="row2"><label>Phone<input id="ephone" /></label><label>WhatsApp<input id="ewa" /></label></div>
+      <div class="row2"><label>Latitude<input id="elat" type="number" step="any" /></label><label>Longitude<input id="elng" type="number" step="any" /></label></div>
+      <div class="row2"><label>Rating<input id="erat" type="number" step="0.1" min="1" max="5" /></label>
+        <label style="padding-top:22px"><input type="checkbox" id="ever" /> Verified</label></div>
+      <div class="row2"><label style="padding-top:22px"><input type="checkbox" id="efeat" /> Featured (paid)</label>
+        <label>Featured until<input id="euntil" type="date" /></label></div>
+      <div class="actions"><button type="button" class="btn g" onclick="closeEdit()">Cancel</button><button class="btn p">Save</button></div>
+    </form>
+  </div></div>
+  <script>
+    let token=sessionStorage.getItem('knToken')||'';
+    let cache={};
+    const hdr=()=>({'Content-Type':'application/json','X-Admin-Token':token});
+    function esc(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return ({'\u0026':'\u0026amp;','\u003c':'\u0026lt;','\u003e':'\u0026gt;','\u0022':'\u0026quot;',"'":'\u0026#39;'})[c];});}
+    function show(id){ ['setupView','loginView','dashView'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    async function boot(){
+      const st=await (await fetch('/api/admin/status')).json();
+      if(st.needsSetup){ show('setupView'); return; }
+      if(token){ const r=await fetch('/api/admin/pending',{headers:hdr()}); if(r.ok){ show('dashView'); loadPending(); loadCats(); return; } }
+      show('loginView');
+    }
+    async function setup(e){
+      e.preventDefault(); const f=new FormData(e.target);
+      const r=await fetch('/api/admin/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:f.get('password'),confirm:f.get('confirm')})});
+      const j=await r.json();
+      if(!r.ok){ document.getElementById('setupErr').textContent=j.error||'Failed'; return; }
+      token=j.token; sessionStorage.setItem('knToken',token); show('dashView'); loadPending(); loadCats();
+    }
+    async function login(e){
+      e.preventDefault(); const f=new FormData(e.target);
+      const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:f.get('password')})});
+      const j=await r.json();
+      if(!r.ok){ document.getElementById('loginErr').textContent=j.error||'Failed'; return; }
+      token=j.token; sessionStorage.setItem('knToken',token); show('dashView'); loadPending(); loadCats();
+    }
+    function logout(){ token=''; sessionStorage.removeItem('knToken'); show('loginView'); }
+    function tab(t){
+      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+      document.getElementById('pendingPanel').classList.toggle('hidden',t!=='pending');
+      document.getElementById('listPanel').classList.toggle('hidden',t!=='list');
+      document.getElementById('addPanel').classList.toggle('hidden',t!=='add');
+      document.getElementById('pwPanel').classList.toggle('hidden',t!=='pw');
+      if(t==='pending') loadPending(); if(t==='list') loadList();
+    }
+    async function loadCats(){
+      const cats=await (await fetch('/api/categories')).json();
+      const opts=cats.map(c=>`<option value="${c.id}">${c.icon} ${esc(c.name)}</option>`).join('');
+      document.getElementById('addCat').innerHTML=opts; document.getElementById('ecat').innerHTML=opts;
+    }
+    async function loadPending(){
+      const el=document.getElementById('pendingPanel'); el.innerHTML='<p class="muted">Loading…</p>';
+      const r=await fetch('/api/admin/pending',{headers:hdr()}); if(!r.ok){ el.innerHTML='Unauthorized'; return; }
+      const list=await r.json();
+      if(!list.length){ el.innerHTML='<p class="muted" style="text-align:center;padding:30px">No pending submissions</p>'; return; }
+      el.innerHTML=list.map(s=>`<div class="card"><h3>${esc(s.name)}</h3><p class="muted">${esc(s.category_name)} · ${esc(s.area)||'—'} · by ${esc(s.submitted_by)||'Anon'}</p>
+        ${s.description?`<p>${esc(s.description)}</p>`:''}${s.phone?`<p class="muted">${esc(s.phone)}</p>`:''}${s.reason?`<p class="muted"><em>${esc(s.reason)}</em></p>`:''}
+        <div class="actions"><button class="btn ok" onclick="approve(${s.id})">Approve</button><button class="btn d" onclick="reject(${s.id})">Reject</button></div></div>`).join('');
+    }
+    async function approve(id){ if(!confirm('Approve?')) return; await fetch('/api/admin/approve/'+id,{method:'POST',headers:hdr()}); loadPending(); }
+    async function reject(id){ if(!confirm('Reject?')) return; await fetch('/api/admin/reject/'+id,{method:'POST',headers:hdr()}); loadPending(); }
+    async function loadList(){
+      const el=document.getElementById('plist'); el.innerHTML='<p class="muted">Loading…</p>';
+      const q=document.getElementById('pq').value.trim();
+      const r=await fetch('/api/admin/providers'+(q?('?q='+encodeURIComponent(q)):''),{headers:hdr()});
+      if(!r.ok){ el.innerHTML='Unauthorized'; return; }
+      const list=await r.json(); cache={}; list.forEach(p=>cache[p.id]=p);
+      if(!list.length){ el.innerHTML='<p class="muted">No providers</p>'; return; }
+      el.innerHTML=list.map(p=>`<div class="card"><h3>${esc(p.name)} ${p.verified?'✓':''} ${p.featured?'★':''}</h3>
+        <p class="muted">${esc(p.category)} · ${esc(p.area)||'—'} ${p.featured?' · FEATURED':''}</p>
+        <p class="muted">${esc(p.address)||''} ${p.phone?'· '+esc(p.phone):''}</p>
+        <div class="actions"><button class="btn o" onclick="openEdit(${p.id})">Edit</button>
+          <button class="btn d" onclick="delP(${p.id},'${esc(p.name).replace(/'/g,'')}')">Delete</button></div></div>`).join('');
+    }
+    function openEdit(id){
+      const p=cache[id]; if(!p) return;
+      document.getElementById('eid').value=p.id; document.getElementById('ename').value=p.name||'';
+      document.getElementById('ecat').value=p.category_id||''; document.getElementById('edesc').value=p.description||'';
+      document.getElementById('eaddr').value=p.address||''; document.getElementById('earea').value=p.area||'';
+      document.getElementById('ephone').value=p.phone||''; document.getElementById('ewa').value=p.whatsapp||'';
+      document.getElementById('elat').value=p.latitude??''; document.getElementById('elng').value=p.longitude??'';
+      document.getElementById('erat').value=p.rating??4; document.getElementById('ever').checked=!!p.verified;
+      document.getElementById('efeat').checked=!!p.featured; document.getElementById('euntil').value=p.featured_until?p.featured_until.slice(0,10):'';
+      document.getElementById('editM').classList.add('open');
+    }
+    function closeEdit(){ document.getElementById('editM').classList.remove('open'); }
+    async function saveEdit(e){
+      e.preventDefault();
+      const id=document.getElementById('eid').value;
+      const data={ name:document.getElementById('ename').value, category_id:parseInt(document.getElementById('ecat').value),
+        description:document.getElementById('edesc').value, address:document.getElementById('eaddr').value, area:document.getElementById('earea').value,
+        phone:document.getElementById('ephone').value, whatsapp:document.getElementById('ewa').value,
+        latitude:document.getElementById('elat').value||null, longitude:document.getElementById('elng').value||null,
+        rating:parseFloat(document.getElementById('erat').value)||4, verified:document.getElementById('ever').checked,
+        featured:document.getElementById('efeat').checked, featured_until:document.getElementById('euntil').value||null };
+      const r=await fetch('/api/admin/provider/'+id,{method:'PUT',headers:hdr(),body:JSON.stringify(data)});
+      if(r.ok){ closeEdit(); loadList(); } else alert('Failed');
+    }
+    async function delP(id,name){ if(!confirm('Delete '+name+'?')) return; await fetch('/api/admin/provider/'+id,{method:'DELETE',headers:hdr()}); loadList(); }
+    async function addP(e){
+      e.preventDefault(); const f=e.target; const data=Object.fromEntries(new FormData(f).entries());
+      data.category_id=parseInt(data.category_id); data.verified=f.verified.checked; data.featured=f.featured.checked;
+      if(data.latitude) data.latitude=parseFloat(data.latitude); if(data.longitude) data.longitude=parseFloat(data.longitude);
+      const r=await fetch('/api/admin/add-provider',{method:'POST',headers:hdr(),body:JSON.stringify(data)});
+      if(r.ok){ alert('Added'); f.reset(); } else { const j=await r.json(); alert(j.error||'Failed'); }
+    }
+    async function changePw(e){
+      e.preventDefault(); const f=new FormData(e.target);
+      const r=await fetch('/api/admin/change-password',{method:'POST',headers:hdr(),body:JSON.stringify({current:f.get('current'),next:f.get('next'),confirm:f.get('confirm')})});
+      const j=await r.json();
+      if(!r.ok){ document.getElementById('pwErr').textContent=j.error||'Failed'; return; }
+      token=j.token; sessionStorage.setItem('knToken',token); document.getElementById('pwErr').style.color='var(--ok)'; document.getElementById('pwErr').textContent='Password updated'; e.target.reset();
+    }
+    document.getElementById('editM').addEventListener('click',e=>{ if(e.target.id==='editM') closeEdit(); });
+    boot();
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What do you need #Kampala</title>
+  <meta name="description" content="Find trusted mechanics, brokers, shops and offices in Kampala. Catch a boda to the closest one." />
+  <style>
+    :root { --teal:#0d9488; --teal-dark:#0f766e; --bg:#f8fafc; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --orange:#f97316; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background:var(--bg); color:var(--text); }
+    header { background:linear-gradient(135deg,var(--teal),var(--teal-dark)); color:#fff; text-align:center; padding:28px 16px 36px; border-radius:0 0 28px 28px; }
+    header h1 { font-size:1.6rem; }
+    header p { opacity:.92; font-size:.95rem; max-width:340px; margin:8px auto 0; }
+    .tag { display:inline-block; background:rgba(255,255,255,.2); padding:4px 12px; border-radius:999px; font-size:.8rem; font-weight:600; margin-bottom:8px; }
+    .wrap { max-width:640px; margin:0 auto; padding:0 16px 80px; }
+    .search { display:flex; gap:8px; background:#fff; border-radius:16px; padding:10px; margin-top:-22px; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .search input { flex:1; border:none; background:#f1f5f9; border-radius:12px; padding:12px 14px; font-size:1rem; }
+    .search button, .btn { border:none; border-radius:10px; font-weight:600; cursor:pointer; }
+    .search button { background:var(--teal); color:#fff; padding:0 16px; }
+    .card { background:#fff; border-radius:14px; padding:14px; margin-top:10px; box-shadow:0 2px 12px rgba(0,0,0,.04); }
+    select, textarea, input[type=text], input[type=password], input[type=number], input[type=date] { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; font:inherit; }
+    .row { display:flex; align-items:center; gap:8px; margin-top:8px; }
+    .muted { color:var(--muted); font-size:.85rem; }
+    .cats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+    .cat { background:#fff; border:2px solid transparent; border-radius:14px; padding:12px 6px; text-align:center; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+    .cat.active { border-color:var(--teal); background:#ccfbf1; }
+    .cat .icon { font-size:1.4rem; }
+    .cat .name { font-size:.72rem; font-weight:600; margin-top:4px; }
+    .result { background:#fff; border-radius:16px; padding:16px; margin-top:12px; border-left:4px solid var(--teal); }
+    .result.feat { border-left-color:#f59e0b; background:linear-gradient(to right,#fffbeb,#fff 45%); }
+    .badge { font-size:.7rem; font-weight:600; padding:3px 8px; border-radius:999px; }
+    .v { background:#dcfce7; color:#166534; }
+    .f { background:#fef3c7; color:#92400e; }
+    .d { background:#e0f2fe; color:#0369a1; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .btn-p { background:var(--teal); color:#fff; padding:8px 14px; text-decoration:none; display:inline-flex; }
+    .btn-o { background:#fff; color:var(--teal); border:1.5px solid var(--teal); padding:8px 14px; text-decoration:none; display:inline-flex; }
+    .btn-g { background:#f1f5f9; padding:8px 14px; }
+    .promo { background:linear-gradient(135deg,#fef3c7,#ffedd5); color:#92400e; border-radius:14px; padding:14px; margin-top:12px; font-size:.9rem; }
+    .fab { position:fixed; bottom:24px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--orange); color:#fff; font-size:1.6rem; border:none; box-shadow:0 6px 20px rgba(249,115,22,.4); }
+    footer { text-align:center; padding:28px 16px; font-size:.85rem; color:var(--muted); border-top:1px solid var(--border); }
+    footer a { color:var(--teal); text-decoration:none; font-weight:500; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; justify-content:center; z-index:50; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; width:100%; max-width:640px; max-height:92vh; overflow:auto; border-radius:24px 24px 0 0; padding:22px 18px 36px; }
+    .fg { margin-bottom:12px; }
+    .fg label { display:block; font-size:.8rem; font-weight:600; color:var(--muted); margin-bottom:4px; }
+    .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#1e293b; color:#fff; padding:12px 18px; border-radius:12px; opacity:0; z-index:80; }
+    .toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="tag">#Kampala</div>
+    <h1>What do you need?</h1>
+    <p>Find trusted mechanics, brokers, shops and offices. Get guided — then catch a boda to the closest one.</p>
+  </header>
+  <div class="wrap">
+    <div class="search">
+      <input id="q" placeholder="e.g. mechanic, phone repair, broker..." />
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <div class="card">
+      <select id="area" onchange="onArea()">
+        <option value="">All Kampala districts / areas</option>
+        <optgroup label="City divisions">
+          <option>Central</option><option>Kawempe</option><option>Makindye</option><option>Nakawa</option><option>Rubaga</option>
+        </optgroup>
+        <optgroup label="Common areas">
+          <option>Nakasero</option><option>Kololo</option><option>Wandegeya</option><option>Makerere</option><option>Mulago</option>
+          <option>Ntinda</option><option>Bugolobi</option><option>Lugogo</option><option>Downtown</option><option>Kamwokya</option>
+          <option>Bukoto</option><option>Kisaasi</option><option>Najjera</option><option>Kabalagala</option><option>Kansanga</option>
+          <option>Mengo</option><option>Nateete</option><option>Najjanankumbi</option><option>Industrial Area</option><option>Citywide</option>
+        </optgroup>
+      </select>
+      <div class="row">
+        <span class="muted" id="loc">Or use GPS to find nearest providers</span>
+        <button class="btn-p" style="font-size:.8rem" onclick="getLoc()">Use my location</button>
+      </div>
+    </div>
+    <div class="promo">
+      <strong>Promote your business</strong>
+      <div style="margin-top:8px;background:rgba(255,255,255,.65);border-radius:10px;padding:10px;font-size:.82rem;line-height:1.55">
+        <strong>Prices (UGX)</strong><br>
+        Featured 1 month: <strong>30,000</strong><br>
+        Featured 3 months: <strong>75,000</strong> (save 15k)<br>
+        Featured 6 months: <strong>140,000</strong> (save 40k)<br>
+        Verified badge: <strong>15,000</strong> once
+      </div>
+      <div class="actions">
+        <a class="btn-p" style="background:#f59e0b" href="https://wa.me/256781431799?text=Hello%20Mabero%2C%20I%20want%20to%20promote%20my%20business%20on%20Kampala%20Needs.%20Please%20send%20payment%20details." target="_blank">WhatsApp to pay</a>
+        <a class="btn-o" href="tel:0772228112">Call 0772228112</a>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:16px;text-transform:uppercase;letter-spacing:.06em;font-size:.75rem" id="title">Browse by category</p>
+    <div class="cats" id="cats"></div>
+    <div id="results"></div>
+  </div>
+  <button class="fab" onclick="openSub()">+</button>
+  <footer>
+    <p><strong style="color:var(--text)">Kampala Needs</strong></p>
+    <p style="margin-top:8px">Served by a trusted Citizen<br><strong style="color:var(--text)">Mabero Evarist</strong></p>
+    <p style="margin-top:8px;line-height:1.7">
+      <a href="tel:0772228112">0772228112</a><br>
+      <a href="https://wa.me/256781431799" target="_blank">WhatsApp 0781431799</a><br>
+      <a href="mailto:Evazomabs697@gmail.com">Evazomabs697@gmail.com</a>
+    </p>
+    <p style="margin-top:12px;font-size:.75rem"><a href="/admin">Admin</a></p>
+  </footer>
+  <div class="overlay" id="subM"><div class="modal">
+    <h2>Suggest a service provider</h2>
+    <p class="muted" style="margin:6px 0 14px">Reviewed by admin before it appears.</p>
+    <form onsubmit="submitP(event)">
+      <div class="fg"><label>Name *</label><input name="name" required /></div>
+      <div class="fg"><label>Category *</label><select name="category_name" id="subCat" required></select></div>
+      <div class="fg"><label>Description</label><textarea name="description"></textarea></div>
+      <div class="fg"><label>Address</label><input name="address" /></div>
+      <div class="fg"><label>District / Area</label>
+        <select name="area"><option value="">Select</option>
+          <option>Central</option><option>Kawempe</option><option>Makindye</option><option>Nakawa</option><option>Rubaga</option>
+          <option>Nakasero</option><option>Kololo</option><option>Wandegeya</option><option>Makerere</option><option>Mulago</option>
+          <option>Ntinda</option><option>Bugolobi</option><option>Lugogo</option><option>Downtown</option><option>Kamwokya</option>
+          <option>Bukoto</option><option>Kisaasi</option><option>Najjera</option><option>Kabalagala</option><option>Kansanga</option>
+          <option>Mengo</option><option>Nateete</option><option>Najjanankumbi</option><option>Industrial Area</option><option>Citywide</option>
+        </select>
+      </div>
+      <div class="fg"><label>Phone</label><input name="phone" /></div>
+      <div class="fg"><label>WhatsApp</label><input name="whatsapp" /></div>
+      <div class="fg"><label>Your name</label><input name="submitted_by" /></div>
+      <div class="actions"><button type="button" class="btn-g" onclick="closeSub()">Cancel</button><button class="btn-p" type="submit">Submit for review</button></div>
+    </form>
+  </div></div>
+  <div class="overlay" id="detM"><div class="modal" id="detC"></div></div>
+  <div class="toast" id="toast"></div>
+  <script>
+    let catId=null, lat=null, lng=null, cache={};
+    function esc(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(c){return ({'\u0026':'\u0026amp;','\u003c':'\u0026lt;','\u003e':'\u0026gt;','\u0022':'\u0026quot;',"'":'\u0026#39;'})[c];});}
+    async function loadCats(){
+      const cats=await (await fetch('/api/categories')).json();
+      document.getElementById('cats').innerHTML=cats.map(c=>`<div class="cat" data-id="${c.id}" onclick="selCat(${c.id})"><div class="icon">${c.icon}</div><div class="name">${esc(c.name)}</div><div class="muted">${c.count}</div></div>`).join('');
+      document.getElementById('subCat').innerHTML=cats.map(c=>`<option value="${esc(c.name)}">${c.icon} ${esc(c.name)}</option>`).join('');
+    }
+    function selCat(id){ catId=catId===id?null:id; document.querySelectorAll('.cat').forEach(el=>el.classList.toggle('active', parseInt(el.dataset.id)===catId)); document.getElementById('title').textContent='Results'; doSearch(); }
+    function onArea(){ document.getElementById('title').textContent=document.getElementById('area').value?('Providers in '+document.getElementById('area').value):'Results'; doSearch(); }
+    async function doSearch(){
+      const p=new URLSearchParams();
+      const q=document.getElementById('q').value.trim();
+      const area=document.getElementById('area').value;
+      if(q) p.set('q',q); if(catId) p.set('category_id',catId); if(area) p.set('area',area);
+      if(lat!=null){ p.set('lat',lat); p.set('lng',lng); }
+      const el=document.getElementById('results'); el.innerHTML='<p class="muted" style="text-align:center;padding:24px">Searching…</p>';
+      try{
+        const data=await (await fetch('/api/search?'+p)).json();
+        render(data.results||[]);
+      }catch(e){ el.innerHTML='<p class="muted" style="text-align:center;padding:24px">Could not reach server.</p>'; }
+    }
+    function render(list){
+      const el=document.getElementById('results'); cache={}; list.forEach(p=>cache[p.id]=p);
+      if(!list.length){ el.innerHTML='<p class="muted" style="text-align:center;padding:28px">No matching providers. <button class="btn-o" onclick="openSub()">Suggest one</button></p>'; return; }
+      el.innerHTML=list.map(p=>`<div class="result ${p.featured?'feat':''}">
+        <div style="display:flex;justify-content:space-between;gap:8px"><h3>${esc(p.name)}</h3>
+          <div>${p.featured?'<span class="badge f">Featured</span>':''} ${p.verified?'<span class="badge v">Trusted</span>':''} ${p.distance_km!=null?`<span class="badge d">${p.distance_km} km</span>`:''}</div></div>
+        <p class="muted">${esc(p.category||'')} ${p.area?'· '+esc(p.area):''} ${p.rating?'· '+p.rating:''}</p>
+        ${p.description?`<p style="margin-top:6px">${esc(p.description)}</p>`:''}
+        <div class="actions"><button class="btn-p" onclick="show(${p.id})">View & get boda</button>
+          ${p.phone?`<a class="btn-o" href="tel:${esc(p.phone)}">Call</a>`:''}</div></div>`).join('');
+    }
+    async function show(id){
+      const p=cache[id]; if(!p) return;
+      const m=document.getElementById('detM'); const c=document.getElementById('detC'); m.classList.add('open');
+      let boda='';
+      if(p.latitude && p.longitude){
+        try{
+          const b=await (await fetch(`/api/boda-link?lat=${p.latitude}&lng=${p.longitude}&name=${encodeURIComponent(p.name)}&address=${encodeURIComponent(p.address||'')}`)).json();
+          boda=`<div class="actions" style="flex-direction:column"><a class="btn-p" style="background:var(--orange);justify-content:center" href="${b.google_maps}" target="_blank">Open in Google Maps</a>
+            <a class="btn-o" style="justify-content:center" href="${b.whatsapp_share}" target="_blank">Share via WhatsApp</a></div>
+            <p class="muted" style="margin-top:8px">${(b.tips||[]).map(t=>'• '+t).join('<br>')}</p>`;
+        }catch(e){}
+      }
+      c.innerHTML=`<h2>${esc(p.name)}</h2><p class="muted">${esc(p.category||'')} ${p.area?'· '+esc(p.area):''}</p>
+        <div style="margin:8px 0">${p.featured?'<span class="badge f">Featured</span>':''} ${p.verified?'<span class="badge v">Trusted</span>':''}</div>
+        ${p.description?`<p>${esc(p.description)}</p>`:''}
+        ${p.address?`<p class="muted">📍 ${esc(p.address)}</p>`:''}
+        ${p.phone?`<p><a href="tel:${esc(p.phone)}">${esc(p.phone)}</a></p>`:''}
+        ${boda}
+        <div class="promo" style="margin-top:14px"><strong>Own a business?</strong><br>Featured 1 mo UGX 30,000 · 3 mo 75,000 · 6 mo 140,000<br>Verified 15,000
+          <div class="actions"><a class="btn-p" href="https://wa.me/256781431799?text=Hello%20Mabero%2C%20I%20want%20to%20promote%20my%20business%20on%20Kampala%20Needs." target="_blank">WhatsApp to pay</a></div></div>
+        <button class="btn-g" style="margin-top:12px;width:100%" onclick="document.getElementById('detM').classList.remove('open')">Close</button>`;
+    }
+    function getLoc(){
+      const s=document.getElementById('loc');
+      if(!navigator.geolocation){ s.textContent='Location not supported'; return; }
+      s.textContent='Getting your location…';
+      navigator.geolocation.getCurrentPosition(pos=>{ lat=pos.coords.latitude; lng=pos.coords.longitude; s.textContent='Showing nearest providers to you'; document.getElementById('title').textContent='Nearest providers'; doSearch(); },
+        ()=>s.textContent='Could not get location — pick a district instead', {enableHighAccuracy:true,timeout:12000});
+    }
+    function openSub(){ document.getElementById('subM').classList.add('open'); }
+    function closeSub(){ document.getElementById('subM').classList.remove('open'); }
+    async function submitP(e){
+      e.preventDefault();
+      const data=Object.fromEntries(new FormData(e.target).entries());
+      const res=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const j=await res.json(); toast(j.message||j.error||'Done'); if(res.ok){ e.target.reset(); closeSub(); }
+    }
+    function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+    document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+    document.getElementById('subM').addEventListener('click',e=>{ if(e.target.id==='subM') closeSub(); });
+    document.getElementById('detM').addEventListener('click',e=>{ if(e.target.id==='detM') e.currentTarget.classList.remove('open'); });
+    loadCats();
+  </script>
+</body>
+</html>
